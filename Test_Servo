@@ -1,0 +1,36 @@
+#include <Servo.h>
+
+Servo myServo;
+int servoPin = 9;
+
+// إعدادات السرعة
+int moveSpeed = 3;  // الوقت بين كل حركة (كلما قل الرقم زادت السرعة)
+int pauseAtEnds = 300;  // وقت التوقف عند الزوايا القصوى
+
+void setup() {
+  myServo.attach(servoPin);
+  Serial.begin(9600);
+  Serial.println("نظام تحريك سيرفو سريع وسلس");
+}
+
+void loop() {
+  // الحركة من 0 إلى 180 درجة بسلاسة
+  for (int angle = 0; angle <= 180; angle++) {
+    myServo.write(angle);
+    Serial.print("الزاوية: ");
+    Serial.println(angle);
+    delay(moveSpeed);
+  }
+  
+  delay(pauseAtEnds);  // وقفة قصيرة عند 180 درجة
+  
+  // الحركة من 180 إلى 0 درجة بسلاسة
+  for (int angle = 180; angle >= 0; angle--) {
+    myServo.write(angle);
+    Serial.print("الزاوية: ");
+    Serial.println(angle);
+    delay(moveSpeed);
+  }
+  
+  delay(pauseAtEnds);  // وقفة قصيرة عند 0 درجة
+}
