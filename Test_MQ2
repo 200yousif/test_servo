@@ -1,0 +1,66 @@
+// تعريف الدبوس المتصل بالحساس
+#define MQ2_PIN A0  // توصيل حساس MQ2 مع الدبوس التناظري A0
+
+// تعريف عتبات التحذير (قيم تقريبية - تحتاج للمعايرة)
+#define SMOKE_THRESHOLD 300     // عتبة الدخان
+#define LPG_THRESHOLD 200       // عتبة غاز البترول المسال
+#define PROPANE_THRESHOLD 150   // عتبة البروبان
+#define HYDROGEN_THRESHOLD 400  // عتبة الهيدروجين
+
+void setup() {
+  Serial.begin(9600);  // بدء الاتصال التسلسلي
+  pinMode(MQ2_PIN, INPUT);  // تعيين دبوس الحساس كمدخل
+  
+  Serial.println("نظام كشف الغازات باستخدام MQ2");
+  Serial.println("-------------------------------");
+  Serial.println("جارٍ تسخين الحساس... انتظر 20 ثانية");
+  
+  delay(20000);  // انتظار 20 ثانية لتسخين الحساس (ضروري لعمل الحساس)
+  Serial.println("جاهز للعمل");
+}
+
+void loop() {
+  // قراءة القيمة التناظرية من الحساس
+  int sensorValue = analogRead(MQ2_PIN);
+  
+  // تحويل القراءة إلى جهد كهربائي
+  float voltage = sensorValue * (5.0 / 1023.0);
+  
+  // عرض النتائج على الشاشة التسلسلية
+  Serial.print("القيمة التناظرية: ");
+  Serial.print(sensorValue);
+  Serial.print(" | الجهد: ");
+  Serial.print(voltage);
+  Serial.print("V");
+  
+  // كشف أنواع الغازات المختلفة
+  bool gasDetected = false;
+  
+  if (sensorValue > SMOKE_THRESHOLD) {
+    Serial.print(" | تحذير: دخان مكتشف!");
+    gasDetected = true;
+  }
+  
+  if (sensorValue > LPG_THRESHOLD) {
+    Serial.print(" | تحذير: غاز البترول المسال (LPG)!");
+    gasDetected = true;
+  }
+  
+  if (sensorValue > PROPANE_THRESHOLD) {
+    Serial.print(" | تحذير: بروبان مكتشف!");
+    gasDetected = true;
+  }
+  
+  if (sensorValue > HYDROGEN_THRESHOLD) {
+    Serial.print(" | تحذير: هيدروجين مكتشف!");
+    gasDetected = true;
+  }
+  
+  if (!gasDetected) {
+    Serial.print(" | الوضع الطبيعي: لا يوجد غاز خطير");
+  }
+  
+  Serial.println();  // سطر جديد
+  Serial.println("-------------------------------");
+  delay(1000);  // انتظار ثانية بين القراءات
+}
