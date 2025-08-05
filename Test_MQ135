@@ -1,0 +1,60 @@
+// تعريف الدبوس المتصل بالحساس
+#define MQ135_PIN A0  // توصيل حساس MQ135 مع الدبوس التناظري A0
+
+// تعريف القيم المرجعية
+#define CLEAN_AIR_RL 10.0  // مقاومة الحساس في الهواء النظيف (كيلو أوم)
+#define R0 76.63           // مقاومة الحساس في 100ppm من NH3 (يجب معايرتها)
+
+// تعريف عتبات التحذير
+#define WARNING_THRESHOLD 100  // عتبة التحذير (ppm)
+#define DANGER_THRESHOLD 200   // عتبة الخطر (ppm)
+
+void setup() {
+  Serial.begin(9600);  // بدء الاتصال التسلسلي
+  pinMode(MQ135_PIN, INPUT);  // تعيين دبوس الحساس كمدخل
+  
+  Serial.println("نظام كشف الغازات باستخدام MQ135");
+  Serial.println("--------------------------------");
+  delay(10000);  // انتظار 10 ثوانٍ لتسخين الحساس (ضروري لعمل الحساس)
+}
+
+void loop() {
+  // قراءة القيمة التناظرية من الحساس
+  int sensorValue = analogRead(MQ135_PIN);
+  
+  // تحويل القراءة إلى جهد كهربائي
+  float voltage = sensorValue * (5.0 / 1023.0);
+  
+  // حساب مقاومة الحساس
+  float RS = ((5.0 * 10.0) / voltage) - 10.0;  // 10 كيلو أوم مقاومة التحميل
+  
+  // حساب نسبة الغاز (تقريبي)
+  float ratio = RS / R0;
+  float ppm = 116.6020682 * pow(ratio, -2.769034857);  // معادلة تقريبية لتركيز الغاز
+  
+  // عرض النتائج على الشاشة التسلسلية
+  Serial.print("القيمة التناظرية: ");
+  Serial.print(sensorValue);
+  Serial.print(" | الجهد: ");
+  Serial.print(voltage);
+  Serial.print("V | المقاومة: ");
+  Serial.print(RS);
+  Serial.print("KΩ | تركيز الغاز: ");
+  Serial.print(ppm);
+  Serial.println(" ppm");
+  
+  // التحقق من وجود غاز خطير
+  if (ppm > DANGER_THRESHOLD) {
+    Serial.println("!! تحذير: مستوى خطير من الغاز !!");
+    // يمكنك هنا إضافة تنبيه صوتي أو ضوئي
+  } 
+  else if (ppm > WARNING_THRESHOLD) {
+    Serial.println("! تحذير: وجود غاز في الجو !");
+  }
+  else {
+    Serial.println("الجو نظيف - لا يوجد غاز مكتشف");
+  }
+  
+  Serial.println("--------------------------------");
+  delay(2000);  // انتظار ثانيتين بين القراءات
+}
